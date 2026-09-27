@@ -1,24 +1,20 @@
 (uiop:define-package nhl
-  (:use #:cl #:dexador #:yason))
+  (:use #:cl))
 
 (in-package #:nhl)
 
-(defparameter *conference-order*
-  '(("Eastern Conference"
-      "Atlantic"
-      "Metropolitan")
-    ("Western Conference"
-      "Central"
-     "Pacific")))
+(defparameter +conference-order+
+  '(("Eastern Conference" "Atlantic" "Metropolitan")
+    ("Western Conference" "Central"  "Pacific")))
 
-(defparameter *NHL-STANDINGS-API* "https://api-web.nhle.com/v1/standings/now")
+(defconstant +NHL-STANDINGS-API+ "https://api-web.nhle.com/v1/standings/now")
 
 
 ;;; GET-TEAM-RECORDS
 ;;; Return a list of hashes containing NHL team records
 (defun get-team-records ()
   (gethash "standings" 
-	   (yason:parse (dex:get *NHL-STANDINGS-API*))))
+	   (yason:parse (dex:get +NHL-STANDINGS-API+))))
 
 ;;; GROUP-BY-DIVISION
 ;;; Group team records by division
@@ -59,12 +55,15 @@
 ;;; Print Conference Headers and Divisional Standings
 (defun print-nhl-standings ()
   (terpri)
+  ;; Collect and Sort NHL Standings Data
   (let ((division
 	  (reverse-division-lists
 	   (group-by-division
 	    (get-team-records)))))
-    (dolist (conf-list *conference-order*)
+    ;; Iter Conferences
+    (dolist (conf-list +conference-order+)
       (format t "~A~%~%" (car conf-list))
+      ;; Iter Divisions
       (dolist (div (cdr conf-list))
 	(print-division-standings
 	 div (gethash div division))))))
