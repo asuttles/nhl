@@ -1,5 +1,0 @@
-# Nhl
-
-## Usage
-
-## Installation

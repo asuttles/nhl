@@ -1,5 +1,10 @@
-* Nhl 
+* About NHL
 
 ** Usage
 
 ** Installation
+* Log
+- [2026-09-26 Sat]
+  Use quickload to install cl-project
+  Use cl-project to create project skeleton
+  
