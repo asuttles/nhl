@@ -11,6 +11,7 @@
 (defparameter *NHL-STANDINGS-API* "https://api-web.nhle.com/v1/standings/now")
 (defparameter *NHL-SCHEDULES-API* "https://api-web.nhle.com/v1/schedule/now")
 
+(defparameter *TZ* "US/Eastern")
 
 ;;;; STANDINGS
 
@@ -56,9 +57,9 @@
 	      name games (+ wins sow) loss otl pts stkWL stkNo)))
   (terpri)(terpri))
 
-;;; PRINT-NHL-STANDINGS
+;;; PRINT-STANDINGS
 ;;; Print Conference Headers and Divisional Standings
-(defun print-nhl-standings ()
+(defun print-standings ()
   (terpri)
   ;; Collect and Sort NHL Standings Data
   (let ((division
@@ -84,9 +85,9 @@
     (declare (ignore second minute hour))
     (format nil "~4,'0D-~2,'0D-~2,'0D" year month day)))
 
-;;; GET-NHL-WEEKLY-SCHEDULE
+;;; GET-WEEKLY-SCHEDULE
 ;;; Return a List of Hashes for Upcomming Week of Games
-(defun get-nhl-weekly-schedule ()
+(defun get-weekly-schedule ()
   (gethash "gameWeek"
 	   (yason:parse
 	    (dex:get *NHL-SCHEDULES-API*))))
@@ -94,8 +95,7 @@
 ;;; GET-TODAYS-GAME-HASH
 ;;; Return a Hash for all of Today's Games
 (defun get-todays-game-hash (games-list)
-  (let ((today-date ;(today)))
-	  "2026-09-29"))
+  (let ((today-date (today)))
     (find-if (lambda (next-games)
 	       (string= today-date
 			(gethash "date" next-games)))
@@ -106,27 +106,30 @@
 (defun get-todays-game-list ()  
   (gethash "games"
 	   (get-todays-game-hash
-	    (get-nhl-weekly-schedule))))
+	    (get-weekly-schedule))))
 
-
+;;; GET-GAME-TIME
+;;; Return the Game Start Time from a game Hash Object 
 (defun get-game-time (game)
   (let* ((utc (gethash "startTimeUTC" game))
-	 (tz (local-time:find-timezone-by-location-name "US/Eastern"))
+	 (tz (local-time:find-timezone-by-location-name *TZ*))
 	 (local (local-time:parse-timestring utc))
 	 (format '((:hour12 2) ":" (:min 2) " " :ampm "  " :short-weekday)))
     (local-time:format-timestring
      nil local :timezone tz :format format)))
 
-  
+;;; GET-TEAM-NAME
+;;; Return Team Abbrev and Nickname from Team Hash Object
 (defun get-team-name (team)
   (format nil "~A ~A"
 	  (gethash "abbrev" team)
 	  (gethash "default"
 		   (gethash "commonName" team))))
   
-
+;;; PRINT-MATCHUPS
+;;; Print Today's NHL Matchups
 (defun print-matchups ()
-  (format t "~%  Today's NHL Matchups~%~%")
+  (format t "~% Today's NHL Matchups  - ~A Time Zone~%~%" *TZ*)
   (dolist (game (get-todays-game-list))
     (format t " ~30A~A~% ~30A~%~%"
 	    (get-team-name (gethash "awayTeam" game))
@@ -134,6 +137,52 @@
 	    (get-team-name (gethash "homeTeam" game)))))
 
 
-;;; Publically exported Main 
+;;; HELP
+
+;;; PRINT-HELP
+;;; Print a Help Message
+(defun print-help ()
+  (format t "Help me!~%"))
+
+
+;;; MAIN PROGRAM
+
+;;; PARSE-ARGUMENTS
+;;; Parse Command-Line Arguments
+(defun parse-arguments (args)
+  (loop for arg in args
+	collect
+	(cond ((string= arg "-s") :standings)
+	      ((string= arg "-m") :matchups)
+	      ((string= arg "-h") :help)
+	      (t (error "Unknown argument: ~A" arg)))))
+
+;;; RUN
+;;; Parse Arguments and Execute Options
+(defun run (args)
+  (handler-case
+      (let ((options (parse-arguments args)))
+
+	(when (member :help options)
+	  (print-help)
+	  (return-from run 0))
+
+	(when (member :standings options)
+	  (print-standings))
+
+	(when (member :matchups options)
+	  (print-matchups))
+
+	(return-from run 0))
+
+    (error (e)
+      (format *error-output* "~A~%" e)
+      (print-help)
+      (return-from run 1))))
+
+
+;;; MAIN (Public)
 (defun main ()
-  (print-nhl-standings))
+  (sb-ext:exit
+   :code
+   (run (uiop:command-line-arguments))))
