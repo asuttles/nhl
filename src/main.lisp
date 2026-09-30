@@ -67,7 +67,7 @@
 	   (group-by-division
 	    (get-team-records)))))
     ;; Iter Conferences
-    (dolist (conf-list +conference-order+)
+    (dolist (conf-list *conference-order*)
       (format t "~A~%~%" (car conf-list))
       ;; Iter Divisions
       (dolist (div (cdr conf-list))
@@ -111,6 +111,7 @@
 ;;; GET-GAME-TIME
 ;;; Return the Game Start Time from a game Hash Object 
 (defun get-game-time (game)
+  (local-time:reread-timezone-repository)
   (let* ((utc (gethash "startTimeUTC" game))
 	 (tz (local-time:find-timezone-by-location-name *TZ*))
 	 (local (local-time:parse-timestring utc))
@@ -163,7 +164,9 @@
   (handler-case
       (let ((options (parse-arguments args)))
 
-	(when (member :help options)
+	(when (or
+	       (null options)
+	       (member :help options))
 	  (print-help)
 	  (return-from run 0))
 

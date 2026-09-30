@@ -1,5 +1,5 @@
 (defsystem "nhl"
-  :version "0.1"
+  :version "0.2"
   :author "Andrew Suttles"
   :license "BSD 2-Clause"
   :depends-on (:dexador
