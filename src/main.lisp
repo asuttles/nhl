@@ -143,7 +143,17 @@
 ;;; PRINT-HELP
 ;;; Print a Help Message
 (defun print-help ()
-  (format t "Help me!~%"))
+  (format t
+          "NHL - Display NHL standings and game matchups~%
+
+Usage:
+  nhl [OPTIONS]
+
+Options:
+  -s    Display current NHL standings
+  -m    Display today's game matchups
+  -h    Display this help message
+"))
 
 
 ;;; MAIN PROGRAM

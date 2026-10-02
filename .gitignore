@@ -1,4 +1,4 @@
-./nhl
+nhl
 *.abcl
 *.fasl
 *.dx32fsl
